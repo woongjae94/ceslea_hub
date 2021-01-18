@@ -1,0 +1,17 @@
+FROM woongjae94/abr-demo:socket
+MAINTAINER <WoongJae> <skydnd0304@gmail.com>
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+#RUN sed -ri 's/^#?X11Forwarding\s+.*/X11Forwarding yes/' /etc/ssh/sshd_config \
+#  && sed -ri 's/^#?X11DisplayOffset\s+.*/X11DisplayOffset 10/' /etc/ssh/sshd_config \
+#  && sed -ri 's/^#?X11UseLocalhost\s+.*/X11UseLocalhost no/' /etc/ssh/sshd_config
+
+RUN apt-get update -y
+#RUN pip install Flask
+#RUN pip install opencv-python
+#RUN pip install PyQt5
+#RUN apt-get install -y  python3-pyqt5 python3-pyqt5.qtwebengine
+RUN apt-get install -y scrot
+
+WORKDIR /home
