@@ -34,7 +34,7 @@ from utils.cam_client_util import *
 parser = argparse.ArgumentParser()
 
 # IP address import
-my_ip = "192.168.0.5"
+my_ip = "192.168.0.22"
 parser.add_argument('--ip', default=my_ip, type=str)
 parser.add_argument('--port', default='3019', type=str, help="port number for communicate")
 parser.add_argument('--headpose_mode', default='lite', type=str, help="lite | normal")
@@ -48,7 +48,7 @@ pose_list = [0,0,0,0,0]
 pose_cnt = 0
 
 headers = {'Content-Type': 'application/json; charset=utf-8'}
-request_ip_address = "http://192.168.0.5:59099/"
+request_ip_address = "http://192.168.0.22:59099/"
 
 def set_backend_and_model(arg_mode):
     if args.headpose_mode == 'normal':
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     
     #add_log("client", "start")
     args = parser.parse_args()
-    cam_address = 'http://192.168.0.5:3009/?action=stream'
+    cam_address = 'http://192.168.0.22:3009/?action=stream'
 
     print("Load head pose model...")
     snapshot_path, model = set_backend_and_model(args.headpose_mode)

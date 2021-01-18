@@ -28,6 +28,8 @@ today = lambda: datetime.now(timezone('Asia/Seoul')).strftime('%Y-%m-%d')
 time_now = lambda: datetime.now(timezone('Asia/Seoul')).strftime('%H:%M:%S')
 mills = lambda: int(round(time.time() * 1000))
 
+connect_phue = False
+
 def add_log(msg):
     cur_time = time_now()
     cur_day = today()
@@ -41,7 +43,7 @@ def get_ip_address():
     return s.getsockname()[0]
 
 if __name__ == '__main__':
-    request_ip_address = "http://192.168.0.5:59099/"
+    request_ip_address = "http://192.168.0.22:59099/"
     Hue_ip = '192.168.0.19'
     device = 'None'
     #device = [None lamp pc shop]
@@ -50,11 +52,12 @@ if __name__ == '__main__':
     shop_web_open =  'false'
 
     # connect phue
-    wait_for_phue_connect=input("press phue link button and then press enter : ")
-    device_lamp = phue_lamp.Phue(Hue_ip)
-    print(device_lamp.get_light_state())
-    if device_lamp.get_light_state():
-        device_lamp.power_switch(False)
+    if connect_phue:
+        wait_for_phue_connect=input("press phue link button and then press enter : ")
+        device_lamp = phue_lamp.Phue(Hue_ip)
+        print(device_lamp.get_light_state())
+        if device_lamp.get_light_state():
+            device_lamp.power_switch(False)
 
     # when web page is opened
     device_pc = control_web.Web()
@@ -103,7 +106,7 @@ if __name__ == '__main__':
                         head_msg = "NoFlask"
 
                     try:
-                        requests.get('http://192.168.0.4:3001/api/v1/actions/action/{}/Mode:{}_Gesture:{}_Action:{}_Head:{}_Device:{}'.format( \
+                        requests.get('http://192.168.0.22:3001/api/v1/actions/action/{}/Mode:{}_Gesture:{}_Action:{}_Head:{}_Device:{}'.format( \
                             'home', control_mode, gesture_msg, action_msg, head_msg, device))
                         print('Mode: ', control_mode, ' |Gesture: ',gesture_msg,' |Action: ', action_msg,' |Head: ', head_msg, ' |Device: ', device)
                         print("BackEnd Signal { web_open:", shop_web_open, " |  }")
@@ -149,19 +152,21 @@ if __name__ == '__main__':
 
                         if action_msg == 'reading':
                             # light on
-                            if not device_lamp.get_light_state():
-                                device_lamp.power_switch(True)
-                            device_lamp.bri_value = 254
-                            device_lamp.change_bri()
-                            device_lamp.change_color_rgb([0.9, 0.7, 0.2])
+                            if connect_phue:
+                                if not device_lamp.get_light_state():
+                                    device_lamp.power_switch(True)
+                                device_lamp.bri_value = 254
+                                device_lamp.change_bri()
+                                device_lamp.change_color_rgb([0.9, 0.7, 0.2])
                             control_mode = 'Gesture'
                             device = 'lamp'
                             if_pre_reading = True
 
                         elif action_msg == 'stretching':
                             if if_pre_reading:
-                                if device_lamp.get_light_state():
-                                    device_lamp.power_switch(False)
+                                if connect_phue:
+                                    if device_lamp.get_light_state():
+                                        device_lamp.power_switch(False)
                                 control_mode = 'Action'
                                 device = 'None'
                                 if_pre_reading = False
@@ -186,8 +191,9 @@ if __name__ == '__main__':
                         
                         if action_msg == 'stretching':
                             if if_pre_reading:
-                                if device_lamp.get_light_state():
-                                    device_lamp.power_switch(False)
+                                if connect_phue:
+                                    if device_lamp.get_light_state():
+                                        device_lamp.power_switch(False)
                                 control_mode = 'Action'
                                 device = 'None'
                                 if_pre_reading = False
@@ -199,7 +205,8 @@ if __name__ == '__main__':
                             continue
 
                         if device == 'lamp':
-                            device_lamp.control_lamp(pre_gesture, gesture_msg)
+                            if connect_phue:
+                                device_lamp.control_lamp(pre_gesture, gesture_msg)
                             #print("lamp")
                             continue
 

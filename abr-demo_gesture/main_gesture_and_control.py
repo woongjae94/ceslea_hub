@@ -15,7 +15,7 @@ headers = {'Content-Type': 'application/json; charset=utf-8'}
 #data = {'flags':'data'}
 # requests.post('ip_address', headers = headers, data = json.dumps(data))
 
-request_ip_address = "http://192.168.0.5:59099/"
+request_ip_address = "http://192.168.0.22:59099/"
     
 
 class Gesture:

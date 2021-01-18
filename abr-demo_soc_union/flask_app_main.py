@@ -68,4 +68,4 @@ def send_value():
 
 if __name__ == '__main__':
     app.debug = False
-    app.run(host="192.168.0.5", port = "59099", threaded = True)
+    app.run(host="192.168.0.22", port = "59099", threaded = True)

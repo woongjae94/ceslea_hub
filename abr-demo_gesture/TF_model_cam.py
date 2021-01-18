@@ -49,7 +49,7 @@ class CAM:
 
         # cam setting
         print("connect to cam streaming server ...")
-        self.cam_address = 'http://192.168.0.5:3009/?action=stream'
+        self.cam_address = 'http://192.168.0.22:3009/?action=stream'
         self.cap = cv2.VideoCapture(self.cam_address)
         self.cap.set(cv2.CAP_PROP_FPS, self.args.fps)
         self.cap.set(cv2.CAP_PROP_AUTOFOCUS, False)

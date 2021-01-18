@@ -24,7 +24,7 @@ import socket
 
 from darknet.python.darknet import *
 headers = {'Content-Type': 'application/json; charset=utf-8'}
-request_ip_address = "http://192.168.0.5:59099/"
+request_ip_address = "http://192.168.0.22:59099/"
 
 
 def sampling_frames(input_frames, sampling_num):
@@ -91,7 +91,7 @@ if __name__ == '__main__':
     #ip = s.getsockname()[0]
     #rint("ip : ", ip, " ,port : ", args.port)
     mills = lambda: int(round(time.time() * 1000))
-    cam_address = 'http://192.168.0.5:3009/?action=stream'
+    cam_address = 'http://192.168.0.22:3009/?action=stream'
     ## docker 실행시에 --link 명령어를 이용해 카메라 스트리밍 도커 컨테이너와 연결 필수
     cwd_path = os.getcwd()
     ###################################################
