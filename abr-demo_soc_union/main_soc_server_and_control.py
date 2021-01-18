@@ -119,7 +119,6 @@ if __name__ == '__main__':
                     if shop_web_open == "shop":
                         if not pre_web_control:
                             pre_web_control = True
-                            time.sleep(4)
                             device_shop.init_shop_page()
                             device = "shop"
                             control_mode = 'Gesture'

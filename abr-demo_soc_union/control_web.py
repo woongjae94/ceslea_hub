@@ -123,6 +123,8 @@ class Shop():
         self.points_list = []
 
     def init_shop_page(self):
+        pg.moveTo(self.screenH//2, self.screenW//2, 1)
+        time.sleep(3)
         cnt = 0
         self.cur_ptr = 0
         self.len_points = 0

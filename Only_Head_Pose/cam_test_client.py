@@ -14,7 +14,7 @@ import json
 #import multiprocessing
 #import threading
 
-import Jetson.GPIO as GPIO
+#import Jetson.GPIO as GPIO
 
 # Import torch base
 import torch
@@ -90,10 +90,10 @@ def print_head_pose(angle_yaw):
         pose_cnt = 0
 
 if __name__ == "__main__":
-    GPIO.setmode(GPIO.BOARD)
-    output_pin = 7
-    GPIO.setup(output_pin, GPIO.OUT, initial=GPIO.HIGH)
-    curr_value = GPIO.HIGH
+    # GPIO.setmode(GPIO.BOARD)
+    # output_pin = 7
+    # GPIO.setup(output_pin, GPIO.OUT, initial=GPIO.HIGH)
+    # curr_value = GPIO.HIGH
     direction = 0
     cudnn.enabled = True
     print(dlib.DLIB_USE_CUDA)
@@ -133,113 +133,99 @@ if __name__ == "__main__":
         ret, frame = cap.read()
 
         if not ret:
-            while True:
-                try:
-                    print("LostContact")
-                    try:
-                        requests.post(request_ip_address + 'head', headers = headers, data = json.dumps({'flags':'LostContact'}))
-                    except:
-                        print("Flask server closed..")
-                    time.sleep(5)
-                    cap.release()
-                    print("Trying to Reconnect")
-                    cap = cv2.VideoCapture(cam_address)
-                except:
-                    print("trying to reconnect cam server but failed.")
-                try:
-                    if cap.isOpen():
-                        break
-                except:
-                    continue
+            print("LostContact")
+            try:
+                requests.post(request_ip_address + 'head', headers = headers, data = json.dumps({'flags':'LostContact'}))
+            except:
+                print("Flask server closed..")
+            time.sleep(5)
+            print("Trying to Reconnect")
+            try:
+                cap.release()
+                cap = cv2.VideoCapture(cam_address)
+            except:
+                print("trying to reconnect cam server but failed.")
 
-        new_frame = cv.resize(frame, (int(frame.shape[1]*0.5), int(frame.shape[0]*0.5)), interpolation=cv.INTER_AREA)        
-        new_frame = cv.cvtColor(new_frame, cv.COLOR_BGR2RGB)
+        else:
+            new_frame = cv.resize(frame, (int(frame.shape[1]*0.5), int(frame.shape[0]*0.5)), interpolation=cv.INTER_AREA)        
+            new_frame = cv.cvtColor(new_frame, cv.COLOR_BGR2RGB)
 
-        face_detects = cnn_face_detector(new_frame, 1)
+            face_detects = cnn_face_detector(new_frame, 1)
 
 
-        for idx, det in enumerate(face_detects):
-            conf = det.confidence
+            for idx, det in enumerate(face_detects):
+                conf = det.confidence
 
-            if conf > 0.8:
-                x_min = det.rect.left()
-                y_min = det.rect.top()
-                x_max = det.rect.right()
-                y_max = det.rect.bottom()
+                if conf > 0.8:
+                    x_min = det.rect.left()
+                    y_min = det.rect.top()
+                    x_max = det.rect.right()
+                    y_max = det.rect.bottom()
 
-                
-                bbox_width = abs(x_max - x_min)
-                bbox_height = abs(y_max - y_min)
-                x_min -= 2 * bbox_width / 4
-                x_max += 2 * bbox_width / 4
-                y_min -= 3 * bbox_height / 4
-                y_max += bbox_height / 4
-                x_min = int(max(x_min, 0))
-                y_min = int(max(y_min, 0))
-                x_max = int(min(new_frame.shape[1], x_max))
-                y_max = int(min(new_frame.shape[0], y_max))
+                    
+                    bbox_width = abs(x_max - x_min)
+                    bbox_height = abs(y_max - y_min)
+                    x_min -= 2 * bbox_width / 4
+                    x_max += 2 * bbox_width / 4
+                    y_min -= 3 * bbox_height / 4
+                    y_max += bbox_height / 4
+                    x_min = int(max(x_min, 0))
+                    y_min = int(max(y_min, 0))
+                    x_max = int(min(new_frame.shape[1], x_max))
+                    y_max = int(min(new_frame.shape[0], y_max))
 
-                # Crop image
-                img = new_frame[y_min:y_max,x_min:x_max]
-                img = Image.fromarray(img)
+                    # Crop image
+                    img = new_frame[y_min:y_max,x_min:x_max]
+                    img = Image.fromarray(img)
 
-                # Transform
-                img = transformations(img)
-                img_shape = img.size()
-                img = img.view(1, img_shape[0], img_shape[1], img_shape[2])
-                img = Variable(img).cuda()
+                    # Transform
+                    img = transformations(img)
+                    img_shape = img.size()
+                    img = img.view(1, img_shape[0], img_shape[1], img_shape[2])
+                    img = Variable(img).cuda()
 
-                yaw, pitch, roll = model(img)
-                after_hopenet = time.time()
+                    yaw, pitch, roll = model(img)
+                    after_hopenet = time.time()
 
-                yaw_predicted = F.softmax(yaw)
-                pitch_predicted = F.softmax(pitch)
-                roll_predicted = F.softmax(roll)
-                
-                # Get continuous predictions in degrees.
-                yaw_predicted = torch.sum(yaw_predicted.data[0] * idx_tensor) * 3 - 99
-                pitch_predicted = torch.sum(pitch_predicted.data[0] * idx_tensor) * 3 - 99
-                roll_predicted = torch.sum(roll_predicted.data[0] * idx_tensor) * 3 - 99
+                    yaw_predicted = F.softmax(yaw)
+                    pitch_predicted = F.softmax(pitch)
+                    roll_predicted = F.softmax(roll)
+                    
+                    # Get continuous predictions in degrees.
+                    yaw_predicted = torch.sum(yaw_predicted.data[0] * idx_tensor) * 3 - 99
+                    pitch_predicted = torch.sum(pitch_predicted.data[0] * idx_tensor) * 3 - 99
+                    roll_predicted = torch.sum(roll_predicted.data[0] * idx_tensor) * 3 - 99
 
-                #hopenet_utils.draw_axis(new_frame, yaw_predicted, pitch_predicted, roll_predicted, tdx = (x_min + x_max) / 2, tdy= (y_min + y_max) / 2, size = bbox_height/2)
-                #cv.rectangle(new_frame, (x_min, y_min), (x_max, y_max), (0,255,0), 1)
+                    #hopenet_utils.draw_axis(new_frame, yaw_predicted, pitch_predicted, roll_predicted, tdx = (x_min + x_max) / 2, tdy= (y_min + y_max) / 2, size = bbox_height/2)
+                    #cv.rectangle(new_frame, (x_min, y_min), (x_max, y_max), (0,255,0), 1)
 
-                print_head_pose(yaw_predicted)
+                    print_head_pose(yaw_predicted)
 
-                
-                if(yaw_predicted < -50 ):
-                    if direction is not 0:
-                        GPIO.output(output_pin, GPIO.LOW)
-                    direction = 0
-                    print("왼쪽 멀리")
-                elif(yaw_predicted <= -20):
-                    if direction is not 1:
-                        GPIO.output(output_pin, GPIO.LOW)
-                    direction = 1
-                    print("왼쪽 ")
-                elif(yaw_predicted <= 10):
-                    if direction is not 2:
-                        GPIO.output(output_pin, GPIO.HIGH)
-                    direction = 2
-                    print("중앙")
-                elif(yaw_predicted<=35):
-                    if direction is not 3:
-                        GPIO.output(output_pin, GPIO.LOW)
-                    direction = 3
-                    print("오른쪽")
-                elif(yaw_predicted>45):
-                    if direction is not 4:
-                        GPIO.output(output_pin, GPIO.LOW)
-                    direction = 4
-                    print("오른쪽 멀리")
-
-        #frame = cv.cvtColor(new_frame, cv.COLOR_RGB2BGR)
-        #frame = cv.resize(frame, (int(frame.shape[1]*2), int(frame.shape[0]*2)), interpolation=cv.INTER_AREA)
-        #cv.imshow("test", frame)
-        if cv.waitKey(1) & 0xFF == ord('q'):
-            GPIO.cleanup()
-            cap.release()
-            #cv.destroyAllWindows()
-            break
+                    
+                    if(yaw_predicted < -50 ):
+                        # if direction is not 0:
+                        #     GPIO.output(output_pin, GPIO.LOW)
+                        direction = 0
+                        print("__Far Left")
+                    elif(yaw_predicted <= -20):
+                        # if direction is not 1:
+                        #     GPIO.output(output_pin, GPIO.LOW)
+                        direction = 1
+                        print("__Left")
+                    elif(yaw_predicted <= 10):
+                        # if direction is not 2:
+                        #     GPIO.output(output_pin, GPIO.HIGH)
+                        direction = 2
+                        print("__Center")
+                    elif(yaw_predicted<=35):
+                        # if direction is not 3:
+                        #     GPIO.output(output_pin, GPIO.LOW)
+                        direction = 3
+                        print("__Right")
+                    elif(yaw_predicted>45):
+                        # if direction is not 4:
+                        #     GPIO.output(output_pin, GPIO.LOW)
+                        direction = 4
+                        print("__Far Right")
     cap.release()
     #cv.destroyAllWindows()
