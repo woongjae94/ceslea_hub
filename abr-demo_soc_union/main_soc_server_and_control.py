@@ -8,6 +8,7 @@ import json
 import requests
 from pytz import timezone
 from datetime import datetime
+import subprocess
 
 # control
 import phue_lamp
@@ -115,6 +116,11 @@ if __name__ == '__main__':
                         print('** Mode: ', control_mode, ' |Gesture: ',gesture_msg,' |Action: ', action_msg,' |Head: ', head_msg, ' |Device: ', device)
                         print("** BackEnd Signal { web_open:", shop_web_open, " |  }")
                     prev_time = now_time
+
+                    ### restart cam streaming ###
+                    if action_msg == gesture_msg == head_msg == "LostContact":
+                        Proc = subprocess.run('sudo sh ~/D_4000/project/ceslea_hub/cam_stream/cam_stream_run_without_TTY.sh', \
+                            shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
 
                     if shop_web_open == "shop":
                         if not pre_web_control:
